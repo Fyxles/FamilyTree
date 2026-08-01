@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="forest">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=Cormorant:ital,wght@0,500;0,600;1,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Inter', sans-serif;
+    --radius: 14px;
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  html[data-theme="forest"]{
+    --bg:#101B15; --bg-alt:#16241C; --card:#1C2E23; --card-hi:#233A2B;
+    --border: rgba(201,169,97,.28); --text:#F1EDE4; --muted:#93A392;
+    --accent:#C9A961; --accent-2:#7FA37A; --danger:#D97757;
+  }
+  html[data-theme="midnight"]{
+    --bg:#0E1320; --bg-alt:#161D30; --card:#1B2440; --card-hi:#22305A;
+    --border: rgba(122,162,247,.28); --text:#EAEDF7; --muted:#8791AC;
+    --accent:#7AA2F7; --accent-2:#C88CE0; --danger:#E08A8A;
+  }
+  html[data-theme="autumn"]{
+    --bg:#1F1712; --bg-alt:#2A1F17; --card:#33251A; --card-hi:#412D1D;
+    --border: rgba(224,138,74,.32); --text:#F4E9DD; --muted:#B79A85;
+    --accent:#E08A4A; --accent-2:#C0483B; --danger:#E0574A;
+  }
+  html[data-theme="rose"]{
+    --bg:#1B1216; --bg-alt:#241820; --card:#2E1E27; --card-hi:#3A2530;
+    --border: rgba(224,148,175,.3); --text:#F6E9EE; --muted:#B18C98;
+    --accent:#E094AF; --accent-2:#9C7BC9; --danger:#E0748C;
+  }
+  html[data-theme="parchment"]{
+    --bg:#EDE6D6; --bg-alt:#E4DBC6; --card:#F7F1E3; --card-hi:#EFE4CC;
+    --border: rgba(92,64,48,.28); --text:#2B2118; --muted:#6E6252;
+    --accent:#8A5A34; --accent-2:#5C7A52; --danger:#A63B2E;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    transition: background .3s ease, color .3s ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; transition-duration:.001ms !important;}
+  }
+  ::selection{ background:var(--accent); color:var(--bg); }
+
+  a, button, input, select, textarea{ font-family:inherit; color:inherit; }
+  button{ cursor:pointer; }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding: 3.2rem 1.5rem 2.2rem;
+    text-align:center;
+    overflow:hidden;
+    border-bottom:1px solid var(--border);
+    background:
+      radial-gradient(ellipse at top, var(--bg-alt) 0%, var(--bg) 70%);
+  }
+  .rings{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(900px, 140vw); height:min(900px,140vw);
+    opacity:.16; pointer-events:none;
+  }
+  .rings circle{ fill:none; stroke:var(--accent); }
+  .hero-inner{ position:relative; z-index:1; max-width:720px; margin:0 auto; }
+  .eyebrow{
+    font-family:var(--font-body); font-size:.72rem; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:.9rem; font-weight:600;
+  }
+  #titleInput{
+    font-family:var(--font-display); font-weight:600; font-size:clamp(2rem,5vw,3.4rem);
+    background:transparent; border:none; text-align:center; width:100%;
+    color:var(--text); border-radius:8px; padding:.15rem .4rem;
+  }
+  #titleInput:hover, #titleInput:focus{ background:rgba(255,255,255,.04); }
+  #taglineInput{
+    font-family:var(--font-body); font-size:1rem; color:var(--muted);
+    background:transparent; border:none; text-align:center; width:100%;
+    margin-top:.3rem; padding:.2rem .4rem; border-radius:8px;
+  }
+  #taglineInput:hover, #taglineInput:focus{ background:rgba(255,255,255,.04); }
+  .hero-stats{
+    display:flex; gap:1.6rem; justify-content:center; margin-top:1.4rem;
+    flex-wrap:wrap; font-size:.85rem; color:var(--muted);
+  }
+  .hero-stats b{ color:var(--text); font-family:var(--font-display); font-weight:600; }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;
+    padding:.7rem 1.2rem; background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--border);
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:var(--card); border:1px solid var(--border); color:var(--text);
+    padding:.5rem .8rem; border-radius:999px; font-size:.82rem; font-weight:500;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{ background:var(--card-hi); border-color:var(--accent); }
+  .btn:active{ transform:scale(.97); }
+  .btn.primary{ background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:600; }
+  .btn.primary:hover{ filter:brightness(1.08); }
+  .btn.ghost{ background:transparent; }
+  .btn.small{ padding:.36rem .6rem; font-size:.74rem; }
+  .btn.icon{ padding:.5rem; border-radius:50%; }
+  .toolbar .spacer{ flex:1 1 auto; }
+  .search-wrap{ position:relative; }
+  .search-wrap input{
+    background:var(--card); border:1px solid var(--border); color:var(--text);
+    padding:.5rem .9rem .5rem 2rem; border-radius:999px; font-size:.82rem; width:180px;
+    transition: width .2s ease;
+  }
+  .search-wrap input:focus{ width:230px; }
+  .search-wrap svg{ position:absolute; left:.65rem; top:50%; transform:translateY(-50%); opacity:.5; width:14px; height:14px; }
+  select.btn{ appearance:none; -webkit-appearance:none; padding-right:1.8rem; background-image:
+      linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+      linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 14px) center, calc(100% - 9px) center;
+    background-size: 5px 5px, 5px 5px; background-repeat:no-repeat;
+  }
+  input[type="color"]{
+    width:32px; height:32px; padding:0; border-radius:50%; border:1px solid var(--border);
+    background:none; cursor:pointer;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper{ padding:2px; border-radius:50%; }
+  input[type="color"]::-webkit-color-swatch{ border-radius:50%; border:none; }
+  .toolbar-divider{ width:1px; height:22px; background:var(--border); margin:0 .2rem; }
+  .toggle-group{ display:flex; background:var(--card); border:1px solid var(--border); border-radius:999px; padding:2px; }
+  .toggle-group button{ background:transparent; border:none; padding:.42rem .8rem; border-radius:999px; font-size:.78rem; color:var(--muted); font-weight:500; }
+  .toggle-group button.active{ background:var(--accent); color:var(--bg); font-weight:600; }
+
+  /* ---------- Tree viewport ---------- */
+  .tree-viewport{
+    position:relative; width:100%; height:calc(100vh - 190px); min-height:420px;
+    overflow:hidden; cursor:grab; touch-action:none;
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 26px 26px; background-position: -13px -13px;
+  }
+  .tree-viewport.grabbing{ cursor:grabbing; }
+  .tree-inner{ position:absolute; top:0; left:0; transform-origin: 0 0; }
+
+  .zoom-controls{
+    position:absolute; bottom:1.2rem; right:1.2rem; z-index:5;
+    display:flex; flex-direction:column; gap:.4rem; align-items:center;
+    background:var(--card); border:1px solid var(--border); border-radius:14px; padding:.4rem;
+    box-shadow:var(--shadow);
+  }
+  .zoom-controls button{ background:none; border:none; color:var(--text); width:32px; height:32px; border-radius:8px; font-size:1rem; }
+  .zoom-controls button:hover{ background:var(--card-hi); }
+  .zoom-controls .pct{ font-size:.68rem; color:var(--muted); text-align:center; }
+
+  .empty-state{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    text-align:center; color:var(--muted); max-width:340px;
+  }
+  .empty-state h3{ font-family:var(--font-display); color:var(--text); font-size:1.4rem; margin-bottom:.4rem; }
+
+  /* card */
+  .fam-card{
+    width:172px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:.65rem .7rem; display:flex; gap:.6rem; align-items:center;
+    box-shadow:0 4px 14px rgba(0,0,0,.25); cursor:pointer;
+    transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease, opacity .2s ease;
+  }
+  .fam-card:hover{ border-color:var(--accent); transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.35); }
+  .fam-card.selected{ border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .fam-card.dim{ opacity:.28; }
+  .fam-card.match{ border-color:var(--accent-2); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent-2) 40%, transparent); }
+  .avatar{
+    width:38px; height:38px; border-radius:50%; flex:none;
+    background:var(--card-hi); display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem; border:1px solid var(--border); font-family:var(--font-display); font-weight:600;
+    overflow:hidden;
+  }
+  .avatar img, .avatar-lg img, .rel-chip .chip-avatar img{
+    width:100%; height:100%; object-fit:cover; border-radius:50%; display:block;
+  }
+  .fam-card .name{ font-family:var(--font-display); font-weight:600; font-size:.92rem; line-height:1.15; }
+  .fam-card .years{ font-size:.7rem; color:var(--muted); margin-top:.15rem; }
+  .fam-card .meta-line{ min-width:0; }
+  .fam-card .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:108px; }
+
+  /* "Only faces" and "Portrait" card styles — photo on top, text stacked below */
+  .fam-card.style-face, .fam-card.style-portrait{
+    flex-direction: column; align-items: center; justify-content: flex-start;
+    text-align: center; gap: .3rem; width: 100%; height: 100%;
+  }
+  .fam-card.style-face{ justify-content: center; padding: 0; }
+  .fam-card.style-face .avatar, .fam-card.style-portrait .avatar{
+    font-family: var(--font-display); font-weight: 600;
+  }
+  .fam-card.style-face .name, .fam-card.style-portrait .name{
+    max-width: 100%; white-space: normal; overflow: visible; line-height: 1.2;
+  }
+  .fam-card.style-face .avatar{ width:100px; height:100px; font-size:2.6rem; }
+  .fam-card.style-portrait .avatar{ width:104px; height:104px; font-size:2.4rem; margin-bottom:.1rem; }
+  .fam-card.style-portrait .name{ font-size:.96rem; }
+  .fam-card.style-portrait .years{ font-size:.72rem; }
+
+  .gen-label{
+    font-family:var(--font-body); font-size:.68rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--muted); font-weight:600;
+  }
+  .ring-mark{ fill:var(--accent); }
+  .branch-path{ fill:none; stroke:var(--accent); stroke-width:1.6; opacity:.55; }
+  .spouse-path{ stroke:var(--accent-2); stroke-width:1.6; opacity:.7; }
+  .branch-path.dim, .spouse-path.dim{ opacity:.1; }
+
+  /* ---------- List view ---------- */
+  .list-view{ padding:1.4rem; max-width:960px; margin:0 auto; }
+  table.people{ width:100%; border-collapse:collapse; font-size:.86rem; }
+  table.people th{
+    text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--muted); padding:.6rem .7rem; border-bottom:1px solid var(--border); cursor:pointer; user-select:none;
+  }
+  table.people td{ padding:.65rem .7rem; border-bottom:1px solid var(--border); }
+  table.people tr:hover td{ background:var(--card); }
+  table.people tr{ cursor:pointer; }
+  .name-cell{ display:flex; align-items:center; gap:.6rem; font-family:var(--font-display); font-weight:600; }
+
+  .hidden{ display:none !important; }
+
+  /* ---------- Panel (detail) ---------- */
+  .panel{
+    position:fixed; top:0; right:0; height:100%; width:min(380px,100%);
+    background:var(--bg-alt); border-left:1px solid var(--border); z-index:40;
+    box-shadow:-14px 0 40px rgba(0,0,0,.4); padding:1.4rem; overflow-y:auto;
+    transform:translateX(0); transition: transform .25s ease;
+  }
+  .panel.hidden{ transform:translateX(100%); display:block; visibility:hidden; }
+  .panel-close{ float:right; background:none; border:none; color:var(--muted); font-size:1.3rem; line-height:1; }
+  .panel .avatar-lg{
+    width:64px; height:64px; border-radius:50%; background:var(--card); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-size:2rem; margin-bottom:.8rem; font-family:var(--font-display);
+    overflow:hidden;
+  }
+  .panel h2{ font-family:var(--font-display); font-size:1.5rem; margin:.2rem 0 .1rem; }
+  .panel .sub{ color:var(--muted); font-size:.85rem; margin-bottom:1rem; }
+  .panel .bio{ font-size:.88rem; line-height:1.55; color:var(--text); margin-bottom:1.1rem; white-space:pre-wrap; }
+  .panel .rel-group{ margin-bottom:1rem; }
+  .panel .rel-group h4{ font-size:.68rem; text-transform:uppercase; letter-spacing:.14em; color:var(--accent); margin-bottom:.5rem; }
+  .rel-chip{
+    display:inline-flex; align-items:center; gap:.4rem; background:var(--card); border:1px solid var(--border);
+    padding:.3rem .6rem .3rem .3rem; border-radius:999px; font-size:.78rem; margin:0 .35rem .35rem 0;
+  }
+  .rel-chip .chip-avatar{
+    width:20px; height:20px; border-radius:50%; overflow:hidden; flex:none;
+    display:flex; align-items:center; justify-content:center; background:var(--card-hi); font-size:.78rem;
+  }
+  .panel-actions{ display:flex; gap:.5rem; margin-top:1.2rem; }
+
+  /* ---------- Modal / form ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:50;
+    display:flex; align-items:flex-start; justify-content:center; padding:3vh 1rem; overflow-y:auto;
+  }
+  .modal{
+    background:var(--bg-alt); border:1px solid var(--border); border-radius:18px;
+    width:100%; max-width:520px; padding:1.6rem; box-shadow:var(--shadow);
+  }
+  .modal h3{ font-family:var(--font-display); font-size:1.3rem; margin:0 0 1rem; }
+  .field{ margin-bottom:.9rem; }
+  .field label{ display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.35rem; }
+  .field input, .field select, .field textarea{
+    width:100%; background:var(--card); border:1px solid var(--border); border-radius:9px;
+    padding:.55rem .7rem; color:var(--text); font-size:.9rem;
+  }
+  .field textarea{ resize:vertical; min-height:70px; }
+  .photo-field{ display:flex; gap:.9rem; align-items:flex-start; }
+  .photo-preview{
+    width:64px; height:64px; border-radius:50%; flex:none; overflow:hidden;
+    background:var(--card); border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
+    font-size:1.8rem; font-family:var(--font-display); font-weight:600;
+  }
+  .photo-preview img{ width:100%; height:100%; object-fit:cover; }
+  .photo-field-actions{ flex:1; display:flex; flex-direction:column; gap:.4rem; }
+  .photo-or{ font-size:.72rem; color:var(--muted); margin-top:.2rem; }
+  .field-row{ display:flex; gap:.7rem; }
+  .field-row .field{ flex:1; }
+  .checkbox-row{ display:flex; align-items:center; gap:.5rem; font-size:.85rem; color:var(--muted); }
+  .checkbox-row input{ width:auto; }
+  .multi-select-box{
+    background:var(--card); border:1px solid var(--border); border-radius:9px; padding:.5rem;
+    max-height:120px; overflow-y:auto; display:flex; flex-direction:column; gap:.3rem;
+  }
+  .multi-select-box label{ display:flex; align-items:center; gap:.5rem; font-size:.82rem; color:var(--text); text-transform:none; letter-spacing:0; }
+  .multi-select-box input{ width:auto; }
+  .modal-actions{ display:flex; justify-content:space-between; gap:.6rem; margin-top:1.3rem; }
+  .modal-actions .right{ display:flex; gap:.6rem; }
+
+  @media (max-width: 640px){
+    .fam-card{ width:150px; }
+    .toolbar{ gap:.4rem; }
+    .search-wrap input{ width:120px; }
+    .search-wrap input:focus{ width:150px; }
+  }
+
+  #printTree{ display:none; }
+
+  @media print{
+    .toolbar, .zoom-controls, .panel, .modal-overlay{ display:none !important; }
+    body{ background:#fff; color:#111; }
+    .hero{ border:none; }
+    .hero .rings{ display:none; }
+    body.print-tree-active main{ display:none !important; }
+    #printTree.active{
+      display:block; position:relative; margin:0 auto;
+      /* shrink to fit the printable page width; height follows proportionally */
+      max-width:100%; transform-origin: top center;
+    }
+    #printTree .p-card{
+      position:absolute; box-sizing:border-box; background:#fff; color:#111;
+      border:1px solid #999; border-radius:10px; padding:.5rem .6rem;
+      display:flex; align-items:center; gap:.5rem; break-inside:avoid;
+    }
+    #printTree .p-card.style-face,
+    #printTree .p-card.style-portrait{
+      flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:.25rem;
+    }
+    #printTree .p-avatar{
+      width:38px; height:38px; border-radius:50%; flex:none; overflow:hidden;
+      background:#eee; border:1px solid #999; display:flex; align-items:center; justify-content:center;
+      font-weight:600; font-family:var(--font-display);
+    }
+    #printTree .p-card.style-face .p-avatar,
+    #printTree .p-card.style-portrait .p-avatar{ width:70%; height:auto; aspect-ratio:1/1; font-size:1.6rem; }
+    #printTree .p-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    #printTree .p-name{ font-family:var(--font-display); font-weight:600; font-size:.85rem; line-height:1.15; }
+    #printTree .p-years{ font-size:.68rem; color:#555; margin-top:.1rem; }
+    #printTree svg{ position:absolute; top:0; left:0; overflow:visible; }
+    #printTree .spouse-path, #printTree .branch-path{ stroke:#888 !important; opacity:1 !important; }
+    #printTree .ring-mark{ fill:#888 !important; }
+    #printTree .gen-label{ fill:#555 !important; color:#555 !important; }
+    @page{ margin: 12mm; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <svg class="rings" viewBox="0 0 400 400" aria-hidden="true">
+    <circle cx="200" cy="200" r="40"></circle>
+    <circle cx="200" cy="200" r="80"></circle>
+    <circle cx="200" cy="200" r="120"></circle>
+    <circle cx="200" cy="200" r="160"></circle>
+    <circle cx="200" cy="200" r="196"></circle>
+  </svg>
+  <div class="hero-inner">
+    <div class="eyebrow">A living record</div>
+    <input id="titleInput" value="The Hart Family Tree" aria-label="Family tree title" />
+    <input id="taglineInput" value="Every ring tells a year. Every branch, a name." aria-label="Tagline" />
+    <div class="hero-stats" id="heroStats"></div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn primary" id="addPersonBtn">+ Add person</button>
+  <button class="btn small" id="lockToggleBtn" title="Toggle edit lock">🔒 Locked</button>
+  <div class="toggle-group" role="tablist" aria-label="View mode">
+    <button id="viewTreeBtn" class="active">Tree</button>
+    <button id="viewListBtn">List</button>
+  </div>
+  <select id="cardStyleSelect" class="btn small" title="Card style">
+    <option value="standard">Standard cards</option>
+    <option value="face">Only faces</option>
+    <option value="portrait">Portrait cards</option>
+  </select>
+  <select id="spacingSelect" class="btn small" title="Branch spacing">
+    <option value="compact">Compact spacing</option>
+    <option value="centered">Centered on parents</option>
+  </select>
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="searchInput" type="search" placeholder="Search names…" />
+  </div>
+  <div class="spacer"></div>
+
+  <select id="themeSelect" class="btn small" title="Theme">
+    <option value="forest">Forest &amp; Gold</option>
+    <option value="midnight">Midnight</option>
+    <option value="autumn">Autumn</option>
+    <option value="rose">Rose Quartz</option>
+    <option value="parchment">Parchment</option>
+  </select>
+  <input type="color" id="accentPicker" title="Custom accent colour" value="#c9a961" />
+  <select id="fontSelect" class="btn small" title="Typeface pairing">
+    <option value="fraunces-inter">Fraunces / Inter</option>
+    <option value="newsreader-plex">Newsreader / IBM Plex</option>
+    <option value="cormorant-work">Cormorant / Work Sans</option>
+  </select>
+
+  <div class="toolbar-divider"></div>
+  <button class="btn small" id="exportBtn">⬇ Export</button>
+  <button class="btn small" id="importBtn">⬆ Import</button>
+  <button class="btn small" id="printBtn">⎙ Print</button>
+  <button class="btn small ghost" id="sampleBtn">Load sample</button>
+  <button class="btn small ghost" id="clearBtn">Clear all</button>
+  <input type="file" id="importFile" accept="application/json" hidden />
+</div>
+
+<main>
+  <div class="tree-viewport" id="treeViewport">
+    <div class="tree-inner" id="treeInner">
+      <svg id="treeSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="empty-state hidden" id="emptyState">
+      <h3>No one here yet</h3>
+      <p>Add your first family member, or load the sample tree to see how it looks.</p>
+    </div>
+    <div class="zoom-controls">
+      <button id="zoomIn" title="Zoom in">+</button>
+      <div class="pct" id="zoomPct">100%</div>
+      <button id="zoomOut" title="Zoom out">−</button>
+      <button id="zoomReset" title="Reset view">⤢</button>
+    </div>
+  </div>
+  <div class="list-view hidden" id="listView">
+    <div id="listBody" class="list-groups"></div>
+  </div>
+</main>
+
+<div id="printTree"></div>
+
+<aside class="panel hidden" id="detailPanel"></aside>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Add person</h3>
+    <form id="personForm">
+      <div class="field-row">
+        <div class="field"><label for="fFirst">First name</label><input id="fFirst" required /></div>
+        <div class="field"><label for="fLast">Last name</label><input id="fLast" /></div>
+      </div>
+      <div class="field"><label for="fMaiden">Maiden / birth name (optional)</label><input id="fMaiden" /></div>
+      <div class="field-row">
+        <div class="field"><label for="fBirth">Birth year</label><input id="fBirth" type="number" placeholder="e.g. 1975" /></div>
+        <div class="field"><label for="fDeath">Death year</label><input id="fDeath" type="number" placeholder="leave blank if living" /></div>
+      </div>
+      <div class="field">
+        <label>Photo</label>
+        <div class="photo-field">
+          <div class="photo-preview" id="photoPreview"></div>
+          <div class="photo-field-actions">
+            <button type="button" class="btn small" id="uploadPhotoBtn">Upload photo</button>
+            <button type="button" class="btn small ghost hidden" id="removePhotoBtn">Remove</button>
+            <input type="file" id="fPhotoFile" accept="image/*" hidden />
+            <div class="photo-or">or use an emoji / initials instead</div>
+            <input id="fPhoto" placeholder="🙂 leave blank for initials" maxlength="4" />
+          </div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="fParent1">Parent 1</label><select id="fParent1"></select></div>
+        <div class="field"><label for="fParent2">Parent 2</label><select id="fParent2"></select></div>
+      </div>
+      <div class="field">
+        <label>Spouse / partner(s)</label>
+        <div class="multi-select-box" id="spouseBox"></div>
+      </div>
+      <div class="field"><label for="fBio">Notes / biography</label><textarea id="fBio" placeholder="Anything worth remembering — where they lived, what they loved, a favourite story…"></textarea></div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="cancelFormBtn">Cancel</button>
+        <div class="right">
+          <button type="button" class="btn ghost" id="deletePersonBtn">Delete</button>
+          <button type="submit" class="btn primary">Save</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="passwordOverlay">
+  <div class="modal" style="max-width:360px;">
+    <h3>Enter edit password</h3>
+    <form id="passwordForm">
+      <div class="field">
+        <label for="passwordInput">Password</label>
+        <input type="password" id="passwordInput" autocomplete="off" />
+      </div>
+      <div id="passwordError" style="color:var(--danger); font-size:.8rem; margin:-.4rem 0 .8rem; display:none;">Incorrect password — try again.</div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="passwordCancelBtn">Cancel</button>
+        <button type="submit" class="btn primary">Unlock</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var state = {
+    title: "The Hart Family Tree",
+    tagline: "Every ring tells a year. Every branch, a name.",
+    theme: "forest",
+    accent: "",
+    font: "fraunces-inter",
+    cardStyle: "standard",
+    layoutMode: "compact",
+    people: {}   // id -> {id,first,last,maiden,birth,death,photo,photoImage,bio,parents:[],spouses:[]}
+  };
+
+  var selectedId = null;
+  var editingId = null;
+  var view = { scale: 1, x: 60, y: 40 };
+  var isPanning = false, panStart = {x:0,y:0}, viewStart = {x:0,y:0};
+
+  /* ---------------------------------------------------------
+     EDIT LOCK
+     Client-side password gate: viewing is always open, but
+     adding/editing/deleting people, importing, clearing, and
+     renaming the tree require unlocking first.
+     NOTE: this is a soft deterrent, not real security — anyone
+     who views the page source can read EDIT_PASSWORD below.
+     Change it before you publish, and don't reuse a real password.
+  --------------------------------------------------------- */
+  var EDIT_PASSWORD = "Family321"; // <-- change this before publishing your site
+  var editUnlocked = false;
+  var pendingUnlockAction = null;
+
+  function updateLockUI(){
+    var btn = document.getElementById('lockToggleBtn');
+    if(btn) btn.textContent = editUnlocked ? '🔓 Unlocked' : '🔒 Locked';
+    var ti = document.getElementById('titleInput'), tg = document.getElementById('taglineInput');
+    if(ti) ti.readOnly = !editUnlocked;
+    if(tg) tg.readOnly = !editUnlocked;
+  }
+  function requireUnlock(action){
+    if(editUnlocked){ action(); return; }
+    pendingUnlockAction = action;
+    document.getElementById('passwordError').style.display = 'none';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('passwordOverlay').classList.remove('hidden');
+    setTimeout(function(){ document.getElementById('passwordInput').focus(); }, 30);
+  }
+  function closePasswordModal(){
+    document.getElementById('passwordOverlay').classList.add('hidden');
+    pendingUnlockAction = null;
+  }
+  document.getElementById('passwordForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var entered = document.getElementById('passwordInput').value;
+    if(entered === EDIT_PASSWORD){
+      editUnlocked = true;
+      updateLockUI();
+      var action = pendingUnlockAction;
+      closePasswordModal();
+      if(action) action();
+    } else {
+      document.getElementById('passwordError').style.display = 'block';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('passwordInput').focus();
+    }
+  });
+  document.getElementById('passwordCancelBtn').addEventListener('click', closePasswordModal);
+  document.getElementById('passwordOverlay').addEventListener('click', function(e){
+    if(e.target.id === 'passwordOverlay') closePasswordModal();
+  });
+  document.getElementById('lockToggleBtn').addEventListener('click', function(){
+    if(editUnlocked){
+      editUnlocked = false;
+      updateLockUI();
+    } else {
+      requireUnlock(function(){});
+    }
+  });
+
+  var CARD_W, CARD_H, COL_GAP, ROW_H, SPOUSE_GAP, UNIT_GAP;
+  var CARD_STYLE_CONFIG = {
+    standard: { w:172, h:64,  rowH:168, colGap:34, spouseGap:14, unitGap:42 },
+    face:     { w:120, h:142, rowH:250, colGap:30, spouseGap:14, unitGap:40 },
+    portrait: { w:150, h:200, rowH:308, colGap:30, spouseGap:14, unitGap:40 }
+  };
+  function applyCardStyle(){
+    var cfg = CARD_STYLE_CONFIG[state.cardStyle] || CARD_STYLE_CONFIG.standard;
+    CARD_W = cfg.w; CARD_H = cfg.h; ROW_H = cfg.rowH; COL_GAP = cfg.colGap;
+    SPOUSE_GAP = cfg.spouseGap; UNIT_GAP = cfg.unitGap;
+  }
+
+  function uid(){ return 'p' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
+
+  /* ---------------------------------------------------------
+     SAMPLE DATA
+  --------------------------------------------------------- */
+  function sampleData(){
+    var p = {};
+    function add(id,first,last,opts){
+      opts = opts || {};
+      p[id] = Object.assign({
+        id:id, first:first, last:last, maiden:"", birth:"", death:"",
+        photo:"", photoImage:"", bio:"", parents:[], spouses:[]
+      }, opts);
+    }
+    add('p1','Eleanor','Hart',{birth:'1938',photo:'👵'});
+    add('p2','Walter','Hart',{birth:'1935',death:'2010',photo:'👴'});
+    add('p3','Margaret','Lin',{maiden:'Hart',birth:'1960',parents:['p1','p2'],photo:'👩'});
+    add('p4','James','Hart',{birth:'1963',parents:['p1','p2'],photo:'🧔'});
+    add('p5','David','Lin',{birth:'1958',photo:'👨'});
+    add('p6','Priya','Hart',{maiden:'Shah',birth:'1965',photo:'👩‍🦱'});
+    add('p7','Sophie','Ward',{maiden:'Lin',birth:'1988',parents:['p3','p5'],photo:'👱‍♀️'});
+    add('p8','Noah','Lin',{birth:'1991',parents:['p3','p5'],photo:'🧑'});
+    add('p9','Aiden','Hart',{birth:'1994',parents:['p4','p6'],photo:'🧑‍🦰'});
+    add('p10','Chris','Ward',{birth:'1987',photo:'👨‍🦱'});
+    add('p11','Lily','Ward',{birth:'2019',parents:['p7','p10'],photo:'👶'});
+    p.p1.spouses=['p2']; p.p2.spouses=['p1'];
+    p.p3.spouses=['p5']; p.p5.spouses=['p3'];
+    p.p4.spouses=['p6']; p.p6.spouses=['p4'];
+    p.p7.spouses=['p10']; p.p10.spouses=['p7'];
+    return {
+      title:"The Hart Family Tree",
+      tagline:"Every ring tells a year. Every branch, a name.",
+      theme:"forest", accent:"", font:"fraunces-inter", cardStyle:"standard", layoutMode:"compact",
+      people:p
+    };
+  }
+
+  /* ---------------------------------------------------------
+     DOM refs
+  --------------------------------------------------------- */
+  var $ = function(sel){ return document.querySelector(sel); };
+  var titleInput = $('#titleInput'), taglineInput = $('#taglineInput');
+  var treeViewport = $('#treeViewport'), treeInner = $('#treeInner'), treeSvg = $('#treeSvg');
+  var emptyState = $('#emptyState');
+  var listView = $('#listView'), listBody = $('#listBody');
+  var detailPanel = $('#detailPanel');
+  var modalOverlay = $('#modalOverlay'), personForm = $('#personForm');
+  var heroStats = $('#heroStats');
+  var printTreeEl = $('#printTree');
+  var printOrientationStyle = document.createElement('style');
+  document.head.appendChild(printOrientationStyle);
+
+  /* ---------------------------------------------------------
+     PERSISTENCE (JSON import/export — no browser storage)
+  --------------------------------------------------------- */
+  function exportJSON(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (state.title || 'family-tree').replace(/[^a-z0-9]+/gi,'-').toLowerCase() + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+  function importJSON(file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        var data = JSON.parse(e.target.result);
+        if(!data.people) throw new Error('missing people');
+        state = Object.assign({title:'Family Tree',tagline:'',theme:'forest',accent:'',font:'fraunces-inter',cardStyle:'standard',layoutMode:'compact'}, data);
+        applyStateToControls();
+        selectedId = null;
+        renderAll();
+      }catch(err){
+        alert('This file doesn\'t look like a valid family tree export.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ---------------------------------------------------------
+     RELATIONSHIP HELPERS
+  --------------------------------------------------------- */
+  function personName(p){
+    if(!p) return '';
+    return [p.first, p.last].filter(Boolean).join(' ') || 'Unnamed';
+  }
+  function initials(p){
+    var s = (p.first||'?').charAt(0) + (p.last||'').charAt(0);
+    return s.toUpperCase() || '?';
+  }
+  // Prefers an uploaded photo, falls back to the emoji, falls back to initials.
+  function avatarInner(p){
+    if(p.photoImage) return '<img src="'+p.photoImage+'" alt="" />';
+    if(p.photo) return escapeHtml(p.photo);
+    return escapeHtml(initials(p));
+  }
+  function childrenOf(id){
+    var out = [];
+    for(var k in state.people){
+      var pp = state.people[k];
+      if(pp.parents && pp.parents.indexOf(id) !== -1) out.push(pp.id);
+    }
+    return out;
+  }
+  function allPeopleArr(){ return Object.keys(state.people).map(function(k){return state.people[k];}); }
+
+  function computeGenerations(){
+    var gen = {};
+    var ids = Object.keys(state.people);
+    var guard = 0;
+    function calc(id, chain){
+      if(gen[id] !== undefined) return gen[id];
+      if(chain.indexOf(id) !== -1) { gen[id] = 0; return 0; } // cycle guard
+      var pers = state.people[id];
+      if(!pers || !pers.parents || pers.parents.length === 0){ gen[id] = 0; return 0; }
+      var maxP = -1;
+      pers.parents.forEach(function(pid){
+        if(state.people[pid]){
+          maxP = Math.max(maxP, calc(pid, chain.concat([id])));
+        }
+      });
+      gen[id] = maxP === -1 ? 0 : maxP + 1;
+      return gen[id];
+    }
+    ids.forEach(function(id){ calc(id, []); });
+
+    // align spouses to the same generation (a few relaxation passes)
+    for(var iter=0; iter<4; iter++){
+      ids.forEach(function(id){
+        var pers = state.people[id];
+        (pers.spouses||[]).forEach(function(sid){
+          if(state.people[sid] && gen[sid] !== undefined){
+            var m = Math.max(gen[id], gen[sid]);
+            gen[id] = m; gen[sid] = m;
+          }
+        });
+      });
+      // recompute descendants after alignment
+      ids.forEach(function(id){
+        var pers = state.people[id];
+        if(pers.parents && pers.parents.length){
+          var maxP = -1;
+          pers.parents.forEach(function(pid){
+            if(gen[pid] !== undefined) maxP = Math.max(maxP, gen[pid]);
+          });
+          if(maxP !== -1) gen[id] = Math.max(gen[id], maxP+1);
+        }
+      });
+    }
+    return gen;
+  }
+
+  /* ---------------------------------------------------------
+     LAYOUT
+  --------------------------------------------------------- */
+  function layout(){
+    var gen = computeGenerations();
+    var ids = Object.keys(state.people);
+    if(ids.length === 0) return {rows:[], positions:{}, width:0, height:0, gen:gen};
+
+    var maxGen = 0;
+    ids.forEach(function(id){ maxGen = Math.max(maxGen, gen[id]); });
+
+    // SPOUSE_GAP / UNIT_GAP come from applyCardStyle(), matching the active card style
+    function unitWidth(members){ return members.length*CARD_W + (members.length-1)*SPOUSE_GAP; }
+
+    var idsByGen = [];
+    for(var g=0; g<=maxGen; g++) idsByGen[g] = [];
+    ids.forEach(function(id){ idsByGen[gen[id]].push(id); });
+
+    // build a couple/spouse-chain "unit" — this is the atomic thing that ever moves.
+    // individuals inside a unit are NEVER separated by anything below.
+    var visited = {};
+    function spouseUnit(startId, g){
+      var members = [startId]; visited[startId] = true;
+      var queue = (state.people[startId].spouses||[]).slice();
+      while(queue.length){
+        var sid = queue.shift();
+        if(visited[sid] || !state.people[sid]) continue;
+        if(gen[sid] !== g) continue;
+        members.push(sid); visited[sid] = true;
+        (state.people[sid].spouses||[]).forEach(function(x){ if(!visited[x]) queue.push(x); });
+      }
+      return members;
+    }
+
+    var rowUnits = [];
+    var unitTree = [];
+    // generation 0: insertion order, grouped by spouse
+    rowUnits[0] = []; unitTree[0] = [];
+    idsByGen[0].forEach(function(id){
+      if(visited[id]) return;
+      var members = spouseUnit(id, 0);
+      rowUnits[0].push(members);
+      unitTree[0].push({ members: members, gen: 0, children: [] });
+    });
+
+    // every later generation: walk the units above in order, so each child unit
+    // lands right after its parents' unit — this is what keeps branches readable.
+    // unitTree records the actual parent -> child unit links, used by centered mode
+    // to size and place each family branch as its own subtree.
+    for(var r=0; r<maxGen; r++){
+      var nextUnits = [];
+      var nextUnitObjs = [];
+      rowUnits[r].forEach(function(unit, ui){
+        var childSeen = {};
+        var parentObj = unitTree[r][ui];
+        unit.forEach(function(pid){
+          childrenOf(pid).forEach(function(cid){
+            if(gen[cid] === r+1 && !childSeen[cid]){
+              childSeen[cid] = true;
+              if(!visited[cid]){
+                var childMembers = spouseUnit(cid, r+1);
+                nextUnits.push(childMembers);
+                var childObj = { members: childMembers, gen: r+1, children: [] };
+                parentObj.children.push(childObj);
+                nextUnitObjs.push(childObj);
+              }
+            }
+          });
+        });
+      });
+      // anyone left in this generation with no placed parent (orphans / unconnected people)
+      // — these have no entry in any parent's children[], so they act as their own root subtree
+      idsByGen[r+1].forEach(function(id){
+        if(!visited[id]){
+          var members = spouseUnit(id, r+1);
+          nextUnits.push(members);
+          nextUnitObjs.push({ members: members, gen: r+1, children: [] });
+        }
+      });
+      rowUnits[r+1] = nextUnits;
+      unitTree[r+1] = nextUnitObjs;
+    }
+
+    var positions = {};
+    function placeRow(units, gi){
+      var cursor = 0;
+      units.forEach(function(members){
+        members.forEach(function(id, idx){ positions[id] = { x: cursor + idx*(CARD_W+SPOUSE_GAP), y: gi*ROW_H, gen: gi }; });
+        cursor += unitWidth(members) + UNIT_GAP;
+      });
+    }
+
+    var centered = (state.layoutMode === 'centered');
+
+    if(!centered){
+      // ---- COMPACT MODE (default) ----
+      rowUnits.forEach(function(units, gi){ placeRow(units, gi); });
+
+      // relaxation: nudge each *unit* (never an individual) toward the average x of its
+      // members' parents, so branches straighten out under their parents generation by generation.
+      // Row 0 (the eldest generation) is never re-sorted — everything else takes its cue from it.
+      for(var pass=0; pass<4; pass++){
+        for(var gi=1; gi<rowUnits.length; gi++){
+          var units = rowUnits[gi];
+          var targets = units.map(function(members){
+            var xs = [];
+            members.forEach(function(id){
+              (state.people[id].parents||[]).forEach(function(pid){ if(positions[pid]) xs.push(positions[pid].x); });
+            });
+            return xs.length ? xs.reduce(function(a,b){return a+b;},0)/xs.length : positions[members[0]].x;
+          });
+          var order = units.map(function(u,i){ return i; });
+          order.sort(function(a,b){ return targets[a]-targets[b]; });
+          var sortedUnits = order.map(function(i){ return units[i]; });
+          rowUnits[gi] = sortedUnits;
+          placeRow(sortedUnits, gi);
+        }
+      }
+
+      // measure widest row, then centre every row relative to it
+      var rowRightEdge = rowUnits.map(function(units){
+        var maxX = 0;
+        units.forEach(function(members){ members.forEach(function(id){ maxX = Math.max(maxX, positions[id].x + CARD_W); }); });
+        return maxX;
+      });
+      var maxWidth = rowRightEdge.reduce(function(a,b){ return Math.max(a,b); }, 0);
+      rowUnits.forEach(function(units, gi){
+        var offset = (maxWidth - rowRightEdge[gi]) / 2;
+        units.forEach(function(members){ members.forEach(function(id){ positions[id].x += offset; }); });
+      });
+    } else {
+      // ---- CENTERED-ON-PARENTS MODE (recursive / "tidy tree") ----
+      // Every unit reserves a horizontal slot wide enough for itself AND all its
+      // descendants. A unit is centred above its own children's combined slot,
+      // so a 3-child family fans out under its parents, and if any of those
+      // children also have 3 kids of their own, that grandchild fan pushes its
+      // parent's siblings further apart to make room — spacing compounds down
+      // the tree instead of staying uniform.
+      function subtreeWidth(u){
+        if(u._sw !== undefined) return u._sw;
+        var own = unitWidth(u.members);
+        if(u.children.length === 0){ u._sw = own; return own; }
+        var childrenTotal = 0;
+        u.children.forEach(function(c, i){
+          if(i > 0) childrenTotal += UNIT_GAP;
+          childrenTotal += subtreeWidth(c);
+        });
+        u._sw = Math.max(own, childrenTotal);
+        return u._sw;
+      }
+      function place(u, slotStart){
+        var sw = subtreeWidth(u);
+        var ownW = unitWidth(u.members);
+        var selfX = slotStart + (sw - ownW) / 2;
+        u.members.forEach(function(id, idx){
+          positions[id] = { x: selfX + idx*(CARD_W+SPOUSE_GAP), y: u.gen*ROW_H, gen: u.gen };
+        });
+        if(u.children.length){
+          var childrenTotal = 0;
+          u.children.forEach(function(c, i){
+            if(i > 0) childrenTotal += UNIT_GAP;
+            childrenTotal += subtreeWidth(c);
+          });
+          var cursor = slotStart + (sw - childrenTotal) / 2;
+          u.children.forEach(function(c){
+            place(c, cursor);
+            cursor += subtreeWidth(c) + UNIT_GAP;
+          });
+        }
+      }
+      // roots = every unit with no parent link: gen-0 units, plus any orphans
+      // discovered deeper in the tree (unconnected people / broken lineage)
+      unitTree.forEach(function(rowObjs){
+        rowObjs.forEach(function(u){ u.children.forEach(function(c){ c._hasParent = true; }); });
+      });
+      var roots = [];
+      unitTree[0].forEach(function(u){ roots.push(u); });
+      for(var gi=1; gi<unitTree.length; gi++){
+        unitTree[gi].forEach(function(u){ if(!u._hasParent) roots.push(u); });
+      }
+
+      var rootCursor = 0;
+      roots.forEach(function(u){
+        place(u, rootCursor);
+        rootCursor += subtreeWidth(u) + UNIT_GAP;
+      });
+    }
+
+    var rows = rowUnits.map(function(units){
+      var flat = [];
+      units.forEach(function(members){ members.forEach(function(id){ flat.push(id); }); });
+      return flat;
+    });
+
+    var treeMaxWidth = 0;
+    Object.keys(positions).forEach(function(id){ treeMaxWidth = Math.max(treeMaxWidth, positions[id].x + CARD_W); });
+
+    var totalHeight = rows.length * ROW_H;
+    return { rows: rows, positions: positions, width: treeMaxWidth, height: totalHeight, gen: gen };
+  }
+
+  /* ---------------------------------------------------------
+     RENDER: TREE
+  --------------------------------------------------------- */
+  var lastLayout = null;
+
+  function romanNumeral(n){
+    var vals = [10,9,5,4,1], syms=['X','IX','V','IV','I'];
+    n = n+1; var out='';
+    while(n>0){ for(var i=0;i<vals.length;i++){ while(n>=vals[i]){ out+=syms[i]; n-=vals[i]; } } }
+    return out || 'I';
+  }
+
+  function renderTree(){
+    applyCardStyle();
+    var L = layout();
+    lastLayout = L;
+    var ids = Object.keys(state.people);
+    emptyState.classList.toggle('hidden', ids.length>0);
+    if(ids.length===0){ treeSvg.innerHTML=''; treeSvg.setAttribute('width',0); treeSvg.setAttribute('height',0); return; }
+
+    var query = ($('#searchInput').value || '').trim().toLowerCase();
+    var matches = {};
+    if(query){
+      ids.forEach(function(id){
+        if(personName(state.people[id]).toLowerCase().indexOf(query) !== -1) matches[id]=true;
+      });
+    }
+    var highlightSet = null;
+    if(selectedId && state.people[selectedId]){
+      highlightSet = {};
+      highlightSet[selectedId]=true;
+      var sp = state.people[selectedId];
+      (sp.parents||[]).forEach(function(id){ highlightSet[id]=true; });
+      (sp.spouses||[]).forEach(function(id){ highlightSet[id]=true; });
+      childrenOf(selectedId).forEach(function(id){ highlightSet[id]=true; });
+    }
+
+    var pad = 50;
+    var W = L.width + pad*2, H = L.height + pad*2;
+    treeSvg.setAttribute('width', W);
+    treeSvg.setAttribute('height', H);
+    treeSvg.setAttribute('viewBox', '0 0 '+W+' '+H);
+
+    var svgParts = [];
+
+    // generation labels
+    L.rows.forEach(function(rowIds, gi){
+      if(!rowIds.length) return;
+      svgParts.push('<text x="'+(pad-30)+'" y="'+(pad + gi*ROW_H + CARD_H/2 + 4)+'" class="gen-label" text-anchor="end">Gen '+romanNumeral(gi)+'</text>');
+    });
+
+    // spouse connectors
+    L.rows.forEach(function(rowIds){
+      rowIds.forEach(function(id){
+        var pers = state.people[id];
+        (pers.spouses||[]).forEach(function(sid){
+          if(id < sid && L.positions[sid] && L.positions[id]){
+            var a = L.positions[id], b = L.positions[sid];
+            if(Math.abs(a.y-b.y) < 1){
+              var ax = a.x+pad+CARD_W, ay = a.y+pad+CARD_H/2;
+              var bx = b.x+pad, by = b.y+pad+CARD_H/2;
+              var left = Math.min(ax,bx), right = Math.max(ax,bx);
+              var dim = highlightSet && !(highlightSet[id] && highlightSet[sid]);
+              svgParts.push('<path class="spouse-path'+(dim?' dim':'')+'" d="M '+left+' '+ay+' L '+right+' '+ay+'"></path>');
+              svgParts.push('<circle class="ring-mark" cx="'+((left+right)/2)+'" cy="'+ay+'" r="3.2" opacity="'+(dim?0.15:0.9)+'"></circle>');
+            }
+          }
+        });
+      });
+    });
+
+    // parent-child connectors, grouped by parent-set
+    var groups = {};
+    L.rows.forEach(function(rowIds){
+      rowIds.forEach(function(id){
+        var pers = state.people[id];
+        if(pers.parents && pers.parents.length){
+          var validParents = pers.parents.filter(function(pid){ return L.positions[pid]; });
+          if(!validParents.length) return;
+          var key = validParents.slice().sort().join('-');
+          if(!groups[key]) groups[key] = { parents: validParents, children: [] };
+          groups[key].children.push(id);
+        }
+      });
+    });
+    Object.keys(groups).forEach(function(key){
+      var grp = groups[key];
+      var pxs = grp.parents.map(function(pid){ return L.positions[pid].x+pad+CARD_W/2; });
+      var py = L.positions[grp.parents[0]].y+pad+CARD_H;
+      var srcX = pxs.reduce(function(a,b){return a+b;},0)/pxs.length;
+      var childY0 = L.positions[grp.children[0]].y+pad;
+      var trunkY = (py + childY0)/2;
+      var dimTrunk = highlightSet && !grp.parents.some(function(p){return highlightSet[p];});
+      svgParts.push('<path class="branch-path'+(dimTrunk?' dim':'')+'" d="M '+srcX+' '+py+' L '+srcX+' '+trunkY+'"></path>');
+      grp.children.forEach(function(cid){
+        var cx = L.positions[cid].x+pad+CARD_W/2, cy = L.positions[cid].y+pad;
+        var dim = highlightSet && !(highlightSet[cid] && dimTrunk===false ? false : (highlightSet[cid]===true && grp.parents.some(function(p){return highlightSet[p];})) ? false : true);
+        var dimEdge = highlightSet ? !(highlightSet[cid] && grp.parents.some(function(p){return highlightSet[p];})) : false;
+        svgParts.push('<path class="branch-path'+(dimEdge?' dim':'')+'" d="M '+srcX+' '+trunkY+' C '+srcX+' '+((trunkY+cy)/2)+', '+cx+' '+((trunkY+cy)/2)+', '+cx+' '+cy+'"></path>');
+      });
+    });
+
+    // cards via foreignObject
+    var cardStyle = state.cardStyle || 'standard';
+    ids.forEach(function(id){
+      var posn = L.positions[id];
+      if(!posn) return;
+      var pers = state.people[id];
+      var x = posn.x+pad, y = posn.y+pad;
+      var years = (pers.birth||'?') + ' – ' + (pers.death ? pers.death : (pers.birth ? 'present' : ''));
+      var avatar = avatarInner(pers);
+      var cls = 'fam-card';
+      if(cardStyle !== 'standard') cls += ' style-'+cardStyle;
+      if(id===selectedId) cls += ' selected';
+      if(query && matches[id]) cls += ' match';
+      if(highlightSet && !highlightSet[id]) cls += ' dim';
+      var inner;
+      if(cardStyle === 'standard'){
+        inner = '<div class="avatar">'+avatar+'</div>'+
+          '<div class="meta-line"><div class="name">'+escapeHtml(personName(pers))+'</div><div class="years">'+escapeHtml(years)+'</div></div>';
+      } else if(cardStyle === 'face'){
+        // faces only — no name/years markup at all, just the avatar, sized to fill the card
+        inner = '<div class="avatar">'+avatar+'</div>';
+      } else {
+        // portrait: photo on top, name centred below, years beneath the name
+        inner = '<div class="avatar">'+avatar+'</div>'+
+          '<div class="name">'+escapeHtml(personName(pers))+'</div>'+
+          '<div class="years">'+escapeHtml(years)+'</div>';
+      }
+      var titleAttr = cardStyle === 'face' ? ' title="'+escapeHtml(personName(pers)+(years?' ('+years+')':''))+'"' : '';
+      svgParts.push(
+        '<foreignObject x="'+x+'" y="'+y+'" width="'+CARD_W+'" height="'+CARD_H+'">'+
+        '<div xmlns="http://www.w3.org/1999/xhtml" class="'+cls+'" data-id="'+id+'"'+titleAttr+'>'+inner+'</div></foreignObject>'
+      );
+    });
+
+    treeSvg.innerHTML = svgParts.join('');
+
+    // bind click events (foreignObject content)
+    var cards = treeSvg.querySelectorAll('.fam-card');
+    cards.forEach(function(el){
+      el.addEventListener('click', function(){
+        selectedId = el.getAttribute('data-id');
+        renderAll();
+      });
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  /* ---------------------------------------------------------
+     RENDER: LIST
+  --------------------------------------------------------- */
+  var sortKey = 'name', sortDir = 1;
+  function renderList(){
+    var gen = computeGenerations();
+    var arr = allPeopleArr();
+    var query = ($('#searchInput').value || '').trim().toLowerCase();
+    if(query) arr = arr.filter(function(p){ return personName(p).toLowerCase().indexOf(query)!==-1; });
+
+    if(!arr.length){
+      listBody.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem;">No one matches yet.</p>';
+      return;
+    }
+
+    // group by generation, oldest first
+    var groups = {};
+    arr.forEach(function(p){ var g = gen[p.id]||0; (groups[g] = groups[g]||[]).push(p); });
+    var genKeys = Object.keys(groups).map(Number).sort(function(a,b){ return a-b; });
+
+    function sortGroup(list){
+      list.sort(function(a,b){
+        var av,bv;
+        if(sortKey==='birth'){ av=a.birth||''; bv=b.birth||''; }
+        else if(sortKey==='death'){ av=a.death||''; bv=b.death||''; }
+        else { av=personName(a).toLowerCase(); bv=personName(b).toLowerCase(); }
+        if(av<bv) return -1*sortDir; if(av>bv) return 1*sortDir; return 0;
+      });
+      return list;
+    }
+
+    function arrow(key){ return sortKey===key ? (sortDir===1?' ▲':' ▼') : ''; }
+
+    listBody.innerHTML = genKeys.map(function(g){
+      var people = sortGroup(groups[g].slice());
+      var rows = people.map(function(p){
+        return '<tr data-id="'+p.id+'">'+
+          '<td class="name-cell"><span class="avatar" style="width:28px;height:28px;font-size:.85rem;">'+avatarInner(p)+'</span>'+escapeHtml(personName(p))+'</td>'+
+          '<td>'+escapeHtml(p.birth||'—')+'</td>'+
+          '<td>'+escapeHtml(p.death||(p.birth?'—':''))+'</td>'+
+        '</tr>';
+      }).join('');
+      return '<div class="gen-section">'+
+        '<h3 class="gen-section-title">Generation '+romanNumeral(g)+' <span class="gen-count">'+people.length+' '+(people.length===1?'person':'people')+'</span></h3>'+
+        '<table class="people"><thead><tr>'+
+          '<th data-sort="name">Name'+arrow('name')+'</th>'+
+          '<th data-sort="birth">Born'+arrow('birth')+'</th>'+
+          '<th data-sort="death">Died'+arrow('death')+'</th>'+
+        '</tr></thead><tbody>'+rows+'</tbody></table>'+
+      '</div>';
+    }).join('');
+
+    listBody.querySelectorAll('tr[data-id]').forEach(function(tr){
+      tr.addEventListener('click', function(){ selectedId = tr.getAttribute('data-id'); renderAll(); });
+    });
+    listBody.querySelectorAll('th[data-sort]').forEach(function(th){
+      th.addEventListener('click', function(){
+        var key = th.getAttribute('data-sort');
+        if(sortKey===key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+        renderList();
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------
+     RENDER: DETAIL PANEL
+  --------------------------------------------------------- */
+  function renderPanel(){
+    if(!selectedId || !state.people[selectedId]){
+      detailPanel.classList.add('hidden');
+      detailPanel.innerHTML = '';
+      return;
+    }
+    var pers = state.people[selectedId];
+    var gen = computeGenerations();
+    var parents = (pers.parents||[]).map(function(id){ return state.people[id]; }).filter(Boolean);
+    var spouses = (pers.spouses||[]).map(function(id){ return state.people[id]; }).filter(Boolean);
+    var kids = childrenOf(selectedId).map(function(id){ return state.people[id]; }).filter(Boolean);
+
+    function chipRow(list){
+      if(!list.length) return '<span style="color:var(--muted);font-size:.8rem;">None recorded</span>';
+      return list.map(function(p){ return '<span class="rel-chip" data-goto="'+p.id+'"><span class="chip-avatar">'+avatarInner(p)+'</span>'+escapeHtml(personName(p))+'</span>'; }).join('');
+    }
+
+    detailPanel.classList.remove('hidden');
+    detailPanel.innerHTML =
+      '<button class="panel-close" id="panelCloseBtn" aria-label="Close">×</button>'+
+      '<div class="avatar-lg">'+avatarInner(pers)+'</div>'+
+      '<h2>'+escapeHtml(personName(pers))+(pers.maiden?' <span style="font-weight:400;font-size:1rem;color:var(--muted);">(née '+escapeHtml(pers.maiden)+')</span>':'')+'</h2>'+
+      '<div class="sub">'+escapeHtml(pers.birth||'?')+' – '+escapeHtml(pers.death || (pers.birth?'present':''))+' · Generation '+romanNumeral(gen[pers.id]||0)+'</div>'+
+      (pers.bio ? '<div class="bio">'+escapeHtml(pers.bio)+'</div>' : '<div class="bio" style="color:var(--muted);">No notes yet — click Edit to add their story.</div>')+
+      '<div class="rel-group"><h4>Parents</h4>'+chipRow(parents)+'</div>'+
+      '<div class="rel-group"><h4>Spouse / partner</h4>'+chipRow(spouses)+'</div>'+
+      '<div class="rel-group"><h4>Children</h4>'+chipRow(kids)+'</div>'+
+      '<div class="panel-actions">'+
+        '<button class="btn ghost" id="panelEditBtn">Edit</button>'+
+        '<button class="btn primary" id="panelAddRelBtn">Add relative</button>'+
+      '</div>';
+
+    $('#panelCloseBtn').addEventListener('click', function(){ selectedId=null; renderAll(); });
+    $('#panelEditBtn').addEventListener('click', function(){ requireUnlock(function(){ openForm(selectedId); }); });
+    $('#panelAddRelBtn').addEventListener('click', function(){ requireUnlock(function(){ openForm(null, selectedId); }); });
+    detailPanel.querySelectorAll('[data-goto]').forEach(function(el){
+      el.addEventListener('click', function(){ selectedId = el.getAttribute('data-goto'); renderAll(); });
+    });
+  }
+
+  /* ---------------------------------------------------------
+     HERO STATS
+  --------------------------------------------------------- */
+  function renderHeroStats(){
+    var arr = allPeopleArr();
+    var gen = computeGenerations();
+    var maxGen = 0;
+    arr.forEach(function(p){ maxGen = Math.max(maxGen, gen[p.id]||0); });
+    var living = arr.filter(function(p){ return p.birth && !p.death; }).length;
+    heroStats.innerHTML = arr.length ?
+      '<span><b>'+arr.length+'</b> people</span>'+
+      '<span><b>'+(maxGen+1)+'</b> generations</span>'+
+      '<span><b>'+living+'</b> living</span>' : '';
+  }
+
+  /* ---------------------------------------------------------
+     FORM (add / edit)
+  --------------------------------------------------------- */
+  function populateParentSelects(excludeId){
+    var opts = '<option value="">— none —</option>';
+    allPeopleArr().forEach(function(p){
+      if(p.id===excludeId) return;
+      opts += '<option value="'+p.id+'">'+escapeHtml(personName(p))+'</option>';
+    });
+    $('#fParent1').innerHTML = opts;
+    $('#fParent2').innerHTML = opts;
+  }
+  function populateSpouseBox(excludeId, selected){
+    var box = $('#spouseBox');
+    var arr = allPeopleArr().filter(function(p){ return p.id!==excludeId; });
+    if(!arr.length){ box.innerHTML = '<span style="color:var(--muted);font-size:.8rem;">Add other people first</span>'; return; }
+    box.innerHTML = arr.map(function(p){
+      var checked = selected && selected.indexOf(p.id)!==-1 ? 'checked' : '';
+      return '<label><input type="checkbox" value="'+p.id+'" '+checked+'/> '+escapeHtml(personName(p))+'</label>';
+    }).join('');
+  }
+
+  var formPhotoImage = '';
+
+  function updatePhotoPreview(){
+    var box = $('#photoPreview');
+    if(formPhotoImage){
+      box.innerHTML = '<img src="'+formPhotoImage+'" alt="" />';
+      $('#removePhotoBtn').classList.remove('hidden');
+    } else {
+      var emoji = $('#fPhoto').value.trim();
+      box.innerHTML = emoji ? escapeHtml(emoji) : '<span style="font-size:1.2rem;">?</span>';
+      $('#removePhotoBtn').classList.add('hidden');
+    }
+  }
+
+  // Downscale + compress an uploaded image client-side so exported JSON stays a reasonable size.
+  function readAndResizeImage(file, callback){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var maxDim = 260;
+        var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        var w = Math.max(1, Math.round(img.width * scale));
+        var h = Math.max(1, Math.round(img.height * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        callback(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = function(){ alert('Couldn\'t read that image — try a different file.'); };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  $('#uploadPhotoBtn').addEventListener('click', function(){ $('#fPhotoFile').click(); });
+  $('#fPhotoFile').addEventListener('change', function(){
+    var file = this.files && this.files[0];
+    if(!file) return;
+    readAndResizeImage(file, function(dataUrl){
+      formPhotoImage = dataUrl;
+      updatePhotoPreview();
+    });
+    this.value = '';
+  });
+  $('#removePhotoBtn').addEventListener('click', function(){
+    formPhotoImage = '';
+    updatePhotoPreview();
+  });
+  $('#fPhoto').addEventListener('input', function(){
+    if(!formPhotoImage) updatePhotoPreview();
+  });
+
+  function openForm(id, presetParentId){
+    editingId = id;
+    var pers = id ? state.people[id] : null;
+    $('#modalTitle').textContent = id ? 'Edit person' : 'Add person';
+    $('#deletePersonBtn').classList.toggle('hidden', !id);
+    $('#fFirst').value = pers ? pers.first||'' : '';
+    $('#fLast').value = pers ? pers.last||'' : '';
+    $('#fMaiden').value = pers ? pers.maiden||'' : '';
+    $('#fBirth').value = pers ? pers.birth||'' : '';
+    $('#fDeath').value = pers ? pers.death||'' : '';
+    $('#fPhoto').value = pers ? pers.photo||'' : '';
+    $('#fBio').value = pers ? pers.bio||'' : '';
+    formPhotoImage = pers ? pers.photoImage||'' : '';
+    updatePhotoPreview();
+    populateParentSelects(id);
+    $('#fParent1').value = pers && pers.parents[0] ? pers.parents[0] : (presetParentId ? '' : '');
+    $('#fParent2').value = pers && pers.parents[1] ? pers.parents[1] : '';
+    populateSpouseBox(id, pers ? pers.spouses : (presetParentId ? [presetParentId] : []));
+    modalOverlay.classList.remove('hidden');
+    setTimeout(function(){ $('#fFirst').focus(); }, 30);
+  }
+  function closeForm(){
+    modalOverlay.classList.add('hidden'); editingId = null; formPhotoImage = '';
+    personForm.reset();
+  }
+
+  personForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var id = editingId || uid();
+    var spouseIds = Array.prototype.slice.call($('#spouseBox').querySelectorAll('input:checked')).map(function(i){return i.value;});
+    var parents = [$('#fParent1').value, $('#fParent2').value].filter(Boolean);
+    var existingSpouses = state.people[id] ? state.people[id].spouses : [];
+
+    state.people[id] = {
+      id: id,
+      first: $('#fFirst').value.trim(),
+      last: $('#fLast').value.trim(),
+      maiden: $('#fMaiden').value.trim(),
+      birth: $('#fBirth').value.trim(),
+      death: $('#fDeath').value.trim(),
+      photo: $('#fPhoto').value.trim(),
+      photoImage: formPhotoImage,
+      bio: $('#fBio').value.trim(),
+      parents: parents,
+      spouses: spouseIds
+    };
+
+    // remove this id from spouses no longer selected, add to newly selected (symmetric)
+    var removed = (existingSpouses||[]).filter(function(sid){ return spouseIds.indexOf(sid)===-1; });
+    removed.forEach(function(sid){
+      if(state.people[sid]) state.people[sid].spouses = (state.people[sid].spouses||[]).filter(function(x){return x!==id;});
+    });
+    spouseIds.forEach(function(sid){
+      if(state.people[sid]){
+        state.people[sid].spouses = state.people[sid].spouses || [];
+        if(state.people[sid].spouses.indexOf(id)===-1) state.people[sid].spouses.push(id);
+      }
+    });
+
+    selectedId = id;
+    closeForm();
+    renderAll();
+  });
+
+  $('#cancelFormBtn').addEventListener('click', closeForm);
+  $('#addPersonBtn').addEventListener('click', function(){ requireUnlock(function(){ openForm(null); }); });
+  $('#deletePersonBtn').addEventListener('click', function(){
+    if(!editingId) return;
+    if(!confirm('Remove this person from the tree? This cannot be undone.')) return;
+    var id = editingId;
+    delete state.people[id];
+    allPeopleArr().forEach(function(p){
+      p.parents = (p.parents||[]).filter(function(x){return x!==id;});
+      p.spouses = (p.spouses||[]).filter(function(x){return x!==id;});
+    });
+    if(selectedId===id) selectedId = null;
+    closeForm();
+    renderAll();
+  });
+  modalOverlay.addEventListener('click', function(e){ if(e.target===modalOverlay) closeForm(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modalOverlay.classList.contains('hidden')) closeForm(); });
+
+  /* ---------------------------------------------------------
+     VIEW TOGGLE
+  --------------------------------------------------------- */
+  $('#viewTreeBtn').addEventListener('click', function(){
+    $('#viewTreeBtn').classList.add('active'); $('#viewListBtn').classList.remove('active');
+    treeViewport.classList.remove('hidden'); listView.classList.add('hidden');
+    $('#cardStyleSelect').classList.remove('hidden');
+  });
+  $('#viewListBtn').addEventListener('click', function(){
+    $('#viewListBtn').classList.add('active'); $('#viewTreeBtn').classList.remove('active');
+    listView.classList.remove('hidden'); treeViewport.classList.add('hidden');
+    $('#cardStyleSelect').classList.add('hidden');
+    renderList();
+  });
+  listView.querySelectorAll('th[data-sort]').forEach(function(th){
+    th.addEventListener('click', function(){
+      var key = th.getAttribute('data-sort');
+      if(sortKey===key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+      renderList();
+    });
+  });
+
+  /* ---------------------------------------------------------
+     SEARCH
+  --------------------------------------------------------- */
+  $('#searchInput').addEventListener('input', function(){
+    if(!treeViewport.classList.contains('hidden')) renderTree(); else renderList();
+  });
+
+  /* ---------------------------------------------------------
+     PAN & ZOOM
+  --------------------------------------------------------- */
+  function applyTransform(){
+    treeInner.style.transform = 'translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';
+    $('#zoomPct').textContent = Math.round(view.scale*100)+'%';
+  }
+  treeViewport.addEventListener('mousedown', function(e){
+    if(e.target.closest('.fam-card')) return;
+    isPanning = true; treeViewport.classList.add('grabbing');
+    panStart = {x:e.clientX,y:e.clientY}; viewStart = {x:view.x,y:view.y};
+  });
+  window.addEventListener('mousemove', function(e){
+    if(!isPanning) return;
+    view.x = viewStart.x + (e.clientX-panStart.x);
+    view.y = viewStart.y + (e.clientY-panStart.y);
+    applyTransform();
+  });
+  window.addEventListener('mouseup', function(){ isPanning=false; treeViewport.classList.remove('grabbing'); });
+  treeViewport.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var delta = e.deltaY > 0 ? -0.08 : 0.08;
+    var newScale = Math.min(2, Math.max(0.3, view.scale + delta));
+    view.scale = newScale;
+    applyTransform();
+  }, {passive:false});
+  // basic touch support
+  var touchStart=null;
+  treeViewport.addEventListener('touchstart', function(e){
+    if(e.touches.length===1){ touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY}; viewStart={x:view.x,y:view.y}; }
+  }, {passive:true});
+  treeViewport.addEventListener('touchmove', function(e){
+    if(e.touches.length===1 && touchStart){
+      view.x = viewStart.x + (e.touches[0].clientX-touchStart.x);
+      view.y = viewStart.y + (e.touches[0].clientY-touchStart.y);
+      applyTransform();
+    }
+  }, {passive:true});
+  treeViewport.addEventListener('touchend', function(){ touchStart=null; });
+
+  $('#zoomIn').addEventListener('click', function(){ view.scale=Math.min(2,view.scale+0.15); applyTransform(); });
+  $('#zoomOut').addEventListener('click', function(){ view.scale=Math.max(0.3,view.scale-0.15); applyTransform(); });
+  $('#zoomReset').addEventListener('click', function(){ view = {scale:1,x:60,y:40}; applyTransform(); });
+
+  /* ---------------------------------------------------------
+     CUSTOMISATION CONTROLS
+  --------------------------------------------------------- */
+  var FONT_PAIRS = {
+    'fraunces-inter': { display:"'Fraunces', serif", body:"'Inter', sans-serif" },
+    'newsreader-plex': { display:"'Newsreader', serif", body:"'IBM Plex Sans', sans-serif" },
+    'cormorant-work': { display:"'Cormorant', serif", body:"'Work Sans', sans-serif" }
+  };
+  function applyFont(key){
+    var pair = FONT_PAIRS[key] || FONT_PAIRS['fraunces-inter'];
+    document.documentElement.style.setProperty('--font-display', pair.display);
+    document.documentElement.style.setProperty('--font-body', pair.body);
+  }
+  $('#themeSelect').addEventListener('change', function(){
+    state.theme = this.value;
+    document.documentElement.setAttribute('data-theme', state.theme);
+  });
+  $('#accentPicker').addEventListener('input', function(){
+    state.accent = this.value;
+    document.documentElement.style.setProperty('--accent', this.value);
+  });
+  $('#fontSelect').addEventListener('change', function(){
+    state.font = this.value;
+    applyFont(state.font);
+  });
+  $('#cardStyleSelect').addEventListener('change', function(){
+    state.cardStyle = this.value;
+    renderTree();
+  });
+  $('#spacingSelect').addEventListener('change', function(){
+    state.layoutMode = this.value;
+    renderTree();
+  });
+  titleInput.addEventListener('input', function(){ state.title = this.value; document.title = this.value || 'Family Tree'; });
+  taglineInput.addEventListener('input', function(){ state.tagline = this.value; });
+
+  function applyStateToControls(){
+    document.documentElement.setAttribute('data-theme', state.theme || 'forest');
+    if(state.accent){ document.documentElement.style.setProperty('--accent', state.accent); $('#accentPicker').value = state.accent; }
+    applyFont(state.font || 'fraunces-inter');
+    $('#themeSelect').value = state.theme || 'forest';
+    $('#fontSelect').value = state.font || 'fraunces-inter';
+    $('#cardStyleSelect').value = state.cardStyle || 'standard';
+    $('#spacingSelect').value = state.layoutMode || 'compact';
+    titleInput.value = state.title || '';
+    taglineInput.value = state.tagline || '';
+    document.title = state.title || 'Family Tree';
+  }
+
+  /* ---------------------------------------------------------
+     TOOLBAR ACTIONS
+  --------------------------------------------------------- */
+  $('#exportBtn').addEventListener('click', exportJSON);
+  $('#importBtn').addEventListener('click', function(){ requireUnlock(function(){ $('#importFile').click(); }); });
+  $('#importFile').addEventListener('change', function(){
+    if(this.files && this.files[0]) importJSON(this.files[0]);
+    this.value = '';
+  });
+  /* ---------------------------------------------------------
+     PRINT (plain-HTML rebuild — foreignObject-in-SVG does not
+     print reliably across browsers, so we mirror the tree as
+     absolutely-positioned divs + a lines-only SVG just for print)
+  --------------------------------------------------------- */
+  function preparePrint(){
+    var treeActive = !treeViewport.classList.contains('hidden');
+    document.body.classList.toggle('print-tree-active', treeActive);
+
+    if(!treeActive){
+      // list view is printing as a normal table — nothing to build
+      printOrientationStyle.textContent = '@page{ margin:12mm; }';
+      printTreeEl.classList.remove('active');
+      printTreeEl.innerHTML = '';
+      return;
+    }
+
+    applyCardStyle();
+    var L = layout();
+    var ids = Object.keys(state.people);
+    if(ids.length === 0){
+      printOrientationStyle.textContent = '@page{ margin:12mm; }';
+      printTreeEl.classList.remove('active');
+      printTreeEl.innerHTML = '';
+      return;
+    }
+
+    var pad = 50;
+    var W = L.width + pad*2, H = L.height + pad*2;
+
+    // pick the orientation that fits the tree's shape best
+    var orientation = (W > H) ? 'landscape' : 'portrait';
+    printOrientationStyle.textContent = '@page{ size:'+orientation+'; margin:12mm; }';
+
+    // rough printable content box (css px, ~96dpi minus page margins) — used only to
+    // scale big trees down so nothing runs off the side; vertical overflow paginates
+    // across multiple printed pages on its own, so height is never forced to fit.
+    var pageBox = orientation === 'landscape' ? {w:1050} : {w:750};
+    var scale = Math.min(1, pageBox.w / W);
+
+    var svgParts = [];
+    L.rows.forEach(function(rowIds, gi){
+      if(!rowIds.length) return;
+      svgParts.push('<text x="'+(pad-30)+'" y="'+(pad + gi*ROW_H + CARD_H/2 + 4)+'" class="gen-label" text-anchor="end">Gen '+romanNumeral(gi)+'</text>');
+    });
+    L.rows.forEach(function(rowIds){
+      rowIds.forEach(function(id){
+        var pers = state.people[id];
+        (pers.spouses||[]).forEach(function(sid){
+          if(id < sid && L.positions[sid] && L.positions[id]){
+            var a = L.positions[id], b = L.positions[sid];
+            if(Math.abs(a.y-b.y) < 1){
+              var ax = a.x+pad+CARD_W, ay = a.y+pad+CARD_H/2;
+              var bx = b.x+pad, by = b.y+pad+CARD_H/2;
+              var left = Math.min(ax,bx), right = Math.max(ax,bx);
+              svgParts.push('<path class="spouse-path" d="M '+left+' '+ay+' L '+right+' '+ay+'"></path>');
+              svgParts.push('<circle class="ring-mark" cx="'+((left+right)/2)+'" cy="'+ay+'" r="3.2"></circle>');
+            }
+          }
+        });
+      });
+    });
+    var groups = {};
+    L.rows.forEach(function(rowIds){
+      rowIds.forEach(function(id){
+        var pers = state.people[id];
+        if(pers.parents && pers.parents.length){
+          var validParents = pers.parents.filter(function(pid){ return L.positions[pid]; });
+          if(!validParents.length) return;
+          var key = validParents.slice().sort().join('-');
+          if(!groups[key]) groups[key] = { parents: validParents, children: [] };
+          groups[key].children.push(id);
+        }
+      });
+    });
+    Object.keys(groups).forEach(function(key){
+      var grp = groups[key];
+      var pxs = grp.parents.map(function(pid){ return L.positions[pid].x+pad+CARD_W/2; });
+      var py = L.positions[grp.parents[0]].y+pad+CARD_H;
+      var srcX = pxs.reduce(function(a,b){return a+b;},0)/pxs.length;
+      var childY0 = L.positions[grp.children[0]].y+pad;
+      var trunkY = (py + childY0)/2;
+      svgParts.push('<path class="branch-path" d="M '+srcX+' '+py+' L '+srcX+' '+trunkY+'"></path>');
+      grp.children.forEach(function(cid){
+        var cx = L.positions[cid].x+pad+CARD_W/2, cy = L.positions[cid].y+pad;
+        svgParts.push('<path class="branch-path" d="M '+srcX+' '+trunkY+' C '+srcX+' '+((trunkY+cy)/2)+', '+cx+' '+((trunkY+cy)/2)+', '+cx+' '+cy+'"></path>');
+      });
+    });
+
+    var cardStyle = state.cardStyle || 'standard';
+    var cardParts = [];
+    ids.forEach(function(id){
+      var posn = L.positions[id];
+      if(!posn) return;
+      var pers = state.people[id];
+      var x = posn.x+pad, y = posn.y+pad;
+      var years = (pers.birth||'?') + ' – ' + (pers.death ? pers.death : (pers.birth ? 'present' : ''));
+      var avatar = avatarInner(pers);
+      var cls = 'p-card';
+      if(cardStyle !== 'standard') cls += ' style-'+cardStyle;
+      var inner;
+      if(cardStyle === 'standard'){
+        inner = '<div class="p-avatar">'+avatar+'</div>'+
+          '<div><div class="p-name">'+escapeHtml(personName(pers))+'</div><div class="p-years">'+escapeHtml(years)+'</div></div>';
+      } else if(cardStyle === 'face'){
+        inner = '<div class="p-avatar">'+avatar+'</div>';
+      } else {
+        inner = '<div class="p-avatar">'+avatar+'</div>'+
+          '<div class="p-name">'+escapeHtml(personName(pers))+'</div>'+
+          '<div class="p-years">'+escapeHtml(years)+'</div>';
+      }
+      cardParts.push('<div class="'+cls+'" style="left:'+x+'px; top:'+y+'px; width:'+CARD_W+'px; height:'+CARD_H+'px;">'+inner+'</div>');
+    });
+
+    printTreeEl.innerHTML =
+      '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'">'+svgParts.join('')+'</svg>' +
+      cardParts.join('');
+    printTreeEl.style.width = W + 'px';
+    printTreeEl.style.height = H + 'px';
+    printTreeEl.style.zoom = scale;
+    printTreeEl.classList.add('active');
+  }
+  window.addEventListener('beforeprint', preparePrint);
+  window.addEventListener('afterprint', function(){ document.body.classList.remove('print-tree-active'); });
+  $('#printBtn').addEventListener('click', function(){ preparePrint(); window.print(); });
+  $('#sampleBtn').addEventListener('click', function(){
+    requireUnlock(function(){
+      if(Object.keys(state.people).length && !confirm('Load the sample family? This will replace your current tree (export first if you want to keep it).')) return;
+      state = sampleData();
+      applyStateToControls();
+      selectedId = null;
+      renderAll();
+    });
+  });
+  $('#clearBtn').addEventListener('click', function(){
+    requireUnlock(function(){
+      if(!confirm('Clear the whole tree? This cannot be undone — export a backup first if needed.')) return;
+      state.people = {};
+      selectedId = null;
+      renderAll();
+    });
+  });
+
+  /* ---------------------------------------------------------
+     MAIN RENDER
+  --------------------------------------------------------- */
+  function renderAll(){
+    renderTree();
+    renderHeroStats();
+    renderPanel();
+    if(!listView.classList.contains('hidden')) renderList();
+    applyTransform();
+  }
+
+  /* ---------------------------------------------------------
+     INIT
+  --------------------------------------------------------- */
+  state = sampleData();
+  applyStateToControls();
+  updateLockUI();
+  renderAll();
+
+})();
+</script>
+</body>
+</html>
